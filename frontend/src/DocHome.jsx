@@ -3,10 +3,12 @@ import './App.css';
 import Header from './components/header';
 import DocSidebar from './docSidebar';
 
+import LogIn from './logIn';
 
-
-
-
+import DocModel from './docModel';
+import DoctorMod from './Doctor';
+import { Canvas } from '@react-three/fiber';
+import { OrbitControls } from '@react-three/drei';
 
 const DocHome = () => {
     const [component,setComponent]=React.useState()
@@ -43,8 +45,20 @@ const DocHome = () => {
                     <Header />
                 <div className='flex flex-row justify-start items-center w-full h-screen'>
                 <DocSidebar />
-                <div className='flex flex-col justify-center items-center w-full'>
-                    Welcome Dr. {name}
+                <div className='flex flex-col justify-center items-center w-full text-2xl  h-full'>
+               <div >
+                Welcome Dr. {name} 
+                </div>
+                {/* <div className='flex flex-col justify-center items-center w-full text-2xl'>
+                  Welcome Dr. {name} */}
+                <Canvas className="relative overflow-visible " style={{zIndex:1}}>
+          <OrbitControls />
+          
+          <ambientLight intensity={1} />
+          <directionalLight position={[10, 10, 5]} intensity={1} />
+          <DoctorMod/>
+        </Canvas>
+                {/* </div> */}
                 </div>
                 </div>
 

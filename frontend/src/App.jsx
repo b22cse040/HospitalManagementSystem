@@ -20,7 +20,7 @@ import MakeDoc from './MakeDoc.jsx';
 import Diagnose from './Diagnose.jsx';
 import ShowDiagnoses from './ShowDiagnoses.jsx';
 import ContactUs from "./ContactUs.jsx";
-
+import SeeDocs from "./SeeDocs.jsx";
 export default function App() {
   let [component, setComponent] = useState(<LogIn />)
   useEffect(()=>{
@@ -80,6 +80,7 @@ export default function App() {
           <Route path="/" element={component} />
           <Route path="/login" element={<LogIn />} />
           <Route path="/contactUs" element={<ContactUs/>} />
+          <Route path="/SeeDocs" element={<SeeDocs/>} />
           </Routes>
      
     </BrowserRouter>

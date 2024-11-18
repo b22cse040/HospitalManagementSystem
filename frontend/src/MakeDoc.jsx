@@ -45,15 +45,25 @@ const MakeDoc = () => {
         formDataToSubmit.append('degrees', formData.degree);
         formDataToSubmit.append('cover_letter', formData.recommendationLetter);
 
-        await fetch("http://localhost:3001/makeDocAccount", {
+      const res= await fetch("http://localhost:3001/makeDocAccount", {
           method: 'POST',
           body: formDataToSubmit,
         });
-
-        setLoading(false);
+        if(res.status===500){
+          
+          alert("Account creation failed, changes have been rolled back");
+          window.location = "/login";
+        }
+       else if(res.status===400){
+          
+          alert("Account creation failed, changes have been rolled back");
+          window.location = "/login";
+        }
+        else
+       { setLoading(false);
         setSnackbarMessage('Account created successfully!');
         setSnackbarOpen(true);
-        window.location = '/DocHome';
+        window.location = '/DocHome';}
       }
     } catch (error) {
       setLoading(false);
@@ -102,7 +112,7 @@ const MakeDoc = () => {
               label="Email"
               variant="outlined"
               name="email"
-              type="email"
+              
               value={formData.email}
               onChange={handleChange}
               fullWidth
@@ -146,10 +156,10 @@ const MakeDoc = () => {
               required
               helperText="At least 8 characters containing 2 digits"
               className="mb-4"
-              inputProps={{
-                minLength: 8,
-                pattern: '.*[0-9].*[0-9].*',
-              }}
+              // inputProps={{
+              //   minLength: 8,
+              //   pattern: '.*[0-9].*[0-9].*',
+              // }}
             />
           </div>
 

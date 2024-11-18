@@ -149,7 +149,8 @@ app.get('/makeAccount', upload.single('PreviousDocuments'),(req, res) => {
             con.commit(err => {
               if (err) {
                 return con.rollback(() => {
-                  res.status(500).json({ error: 'Error committing transaction' });
+                  console.log("Account creation failed");
+                  res.status(500).json({ message:"Account creation failed",error: 'Error committing transaction' });
                 });
               }
               email_in_use = email;
@@ -182,39 +183,7 @@ app.get('/checkIfDocExists', (req, res) => {
   });
 });
 
-// //Makes Doctor Account
-// app.get('/makeDocAccount', (req, res) => {
-//   let params = req.query;
-//   let name = params.name + " " + params.lastname;
-//   let email = params.email;
-//   let password = params.password;
-//   let gender = params.gender;
-//   let schedule = params.schedule;
-//   console.log(req.query);
-//   console.log("Inside doc Account");
-//   let sql_statement = `INSERT INTO Doctor (email, gender, password, name) 
-//                        VALUES ` + `("${email}", "${gender}", "${password}", "${name}")`;
-//   console.log(sql_statement);
-//   con.query(sql_statement, function (error, results, fields) {
-//     if(error)
-//       console.log(error);
-//     if (error) throw error;
-//     else {
-//       let sql_statement = `INSERT INTO DocsHaveSchedules (sched, doctor) 
-//                        VALUES ` + `(${schedule}, "${email}")`;
-//       console.log(sql_statement);
-//       con.query(sql_statement, function(error){
-//         if (error) throw error;
-//       })
-//       email_in_use = email;
-//       password_in_use = password;
-//       who = 'doc';
-//       return res.json({
-//         data: results
-//       })
-//     };
-//   });
-// });
+
 app.post('/resetPasswordDoctor', (req, res) => {
   let something = req.query;
   let email = something.email;
@@ -375,75 +344,7 @@ app.post('/makeDocAccount', upload.fields([{ name: 'degrees' }, { name: 'cover_l
   });
 });
 
-// // Set up the /makeDocAccount route
-// app.get('/makeDocAccount', (req, res) => {
-//   let params = req.query;
-//   let name = params.name + " " + params.lastname;
-//   let email = params.email;
-//   let password = params.password;
-//   let gender = params.gender;
-//   let schedule = params.schedule;
 
-//   // Validation
-//   if (!email.includes('@')) {
-//     return res.status(400).json({ error: 'Invalid email format' });
-//   }
-
-//   if (gender !== 'Male' && gender !== 'Female') {
-//     return res.status(400).json({ error: 'Invalid gender value, must be "M" or "F"' });
-//   }
-//   console.log("Reached Line 228");
-//   // Set isolation level to SERIALIZABLE
-//   con.query('SET SESSION TRANSACTION ISOLATION LEVEL SERIALIZABLE;', (err) => {
-//     if (err) {
-//       console.error('Error setting isolation level:', err);
-//       return res.status(500).json({ error: 'Error setting transaction isolation level' });
-//     }
-
-//     // Begin transaction after setting isolation level
-//     con.beginTransaction(err => {
-//       if (err) {
-//         return res.status(500).json({ error: 'Transaction error' });
-//       }
-
-//       // Insert into Doctor table
-//       let doctorQuery = `INSERT INTO Doctor (email, gender, password, name) 
-//                          VALUES (?, ?, ?, ?)`;
-//       con.query(doctorQuery, [email, gender, password, name], (error, results) => {
-//         if (error) {
-//           return con.rollback(() => {
-//             res.status(500).json({ error: 'Database error during Doctor insert' });
-//           });
-//         }
-//         console.log("Reached Line 251");
-//         // Insert into DocsHaveSchedules table
-//         let scheduleQuery = `INSERT INTO DocsHaveSchedules (sched, doctor) 
-//                              VALUES (?, ?)`;
-//         con.query(scheduleQuery, [schedule, email], (error, results) => {
-//           if (error) {
-//             return con.rollback(() => {
-//               res.status(500).json({ error: 'Database error during DocsHaveSchedules insert' });
-//             });
-//           }
-
-//           // Commit transaction if all inserts succeed
-//           con.commit(err => {
-//             if (err) {
-//               return con.rollback(() => {
-//                 res.status(500).json({ error: 'Error committing transaction' });
-//               });
-//             }
-//             email_in_use = email;
-//             password_in_use = password;
-//             name_in_use = name;
-//             who = 'doc';
-//             res.json({ message: 'Doctor account created successfully', data: results });
-//           });
-//         });
-//       });
-//     });
-//   });
-// });
 
 //Checks if patient is logged in
 app.get('/checklogin', (req, res) => {
@@ -498,6 +399,7 @@ app.get('/checkDoclogin', (req, res) => {
       } else {
         var string = JSON.stringify(results);
         var json = JSON.parse(string);
+        console.log(json);
         email_in_use = json[0].email;
         password_in_use = json[0].password;
         name_in_use = json[0].name;
@@ -512,6 +414,36 @@ app.get('/checkDoclogin', (req, res) => {
   });
 });
 
+//Return degrees and cover letter for a doctor
+app.get('/seeDocs', (req, res) => {
+  // const email = req.params.email;
+  const email=email_in_use;
+  console.log("email in seeDocs", email);
+  // console.log(req)
+  // console.log(req.params)
+  // // Query to retrieve the degrees and cover letter for the specified email
+  const query = `SELECT degrees, cover_letter FROM Doctor WHERE email = ?`;
+
+  con.query(query, [email], (err, results) => {
+    if (err) {
+      console.error('Error retrieving files:', err);
+      return res.status(500).json({ error: 'Database error' });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'No files found for the specified email' });
+    }
+
+    const degrees = results[0].degrees;
+    const coverLetter = results[0].cover_letter;
+
+    // Return files as a JSON response with base64 encoding
+    res.json({
+      degrees: degrees ? degrees.toString('base64') : null,
+      coverLetter: coverLetter ? coverLetter.toString('base64') : null,
+    });
+  });
+});
 
 
 
@@ -665,39 +597,7 @@ app.post('/submitQuestion', async(req, res) => {
   } catch (error) {
     res.status(500).send(error);
   }
-  // fs.writeFile('user_input.txt', data, (err) => {
-  //   if (err) {
-  //     return res.status(500).send("Error saving file");
-  //   }
-  //   // res.send("File successfully saved!");
-  // })
-
   
-
-  // exec('sh ./run.sh', (error, stdout, stderr) => {
-  //   if (error) {
-  //     console.error(`Error executing script: ${error.message}`);
-  //     return res.status(500).send("Error executing script");
-  //   }
-  //   if (stderr) {
-  //     console.error(`Script stderr: ${stderr}`);
-  //   }
-  //   // console.log(`Script output: ${stdout}`);
-  // })
-
-  // fs.readFile('output.log', 'utf8', (err, data) => {
-  //   if (err) {
-  //     console.error("Error reading file:", err);
-  //     return res.status(500).send("Error reading file");
-  //   }
-  //   // dat=data;
-  //   console.log(data);
-  //   // Send the content to the client
-  //   res.send(data);
-  // });
-  // var dat="";
-  
-  // res.send("File created and script executed successfully!");
 });
 //to get all doctor names
 app.get('/docInfo', (req, res) => {
@@ -817,27 +717,7 @@ app.get('/checkIfHistory', (req, res) => {
     });
 });
 
-//Adds to PatientsAttendAppointment Table
-// app.get('/addToPatientSeeAppt', (req, res) => {
-//   let params = req.query;
-//   let email = params.email;
-//   let appt_id = params.id;
-//   let concerns = params.concerns;
-//   let symptoms = params.symptoms;
-//   console.log(req.query);
-//   let sql_try = `INSERT INTO PatientsAttendAppointments (patient, appt, concerns, symptoms) 
-//                  VALUES ("${email}", ${appt_id}, "${concerns}", "${symptoms}")`;
-//   console.log(sql_try);
-//   con.query(sql_try, function (error, results, fields) {
-//     if (error) throw error;
-//     else{
-//       return res.json({
-//         data: results
-//       })
-//     }
-//   });
 
-// });
 app.get('/addToPatientSeeAppt', (req, res) => {
   let params = req.query;
   let email = params.email;
@@ -879,45 +759,6 @@ app.get('/addToPatientSeeAppt', (req, res) => {
 });
 
 
-//Schedules Appointment
-// app.get('/schedule', (req, res) => {
-//   let params = req.query;
-//   let time = params.time;
-//   let date = params.date;
-//   let id = params.id;
-//   let endtime = params.endTime;
-//   let concerns = params.concerns;
-//   let symptoms = params.symptoms;
-//   let doctor = params.doc;
-//   let ndate = new Date(date).toLocaleDateString().substring(0, 10)
-//   console.log(ndate);
-//   let sql_date = `STR_TO_DATE('${ndate}', '%m/%d/%Y')`;
-//   //sql to turn string to sql time obj
-//   console.log("Reached Line 544");
-//   let sql_start = `CONVERT('${time}', TIME)`;
-//   //sql to turn string to sql time obj
-//   let sql_end = `CONVERT('${endtime}', TIME)`;
-//   let sql_try = `INSERT INTO Appointment (id, date, starttime, endtime, status) 
-//                  VALUES (${id}, ${sql_date}, ${sql_start}, ${sql_end}, "NotDone")`;
-//   console.log(sql_try);
-//   console.log("Reached Line 551");
-//   con.query(sql_try, function (error, results, fields) {
-//     if (error) throw error;
-//     else {
-//       let sql_try = `INSERT INTO Diagnose (appt, doctor, diagnosis, prescription) 
-//                  VALUES (${id}, "${doctor}", "Not Yet Diagnosed" , "Not Yet Diagnosed")`;
-//       console.log(sql_try);
-//       con.query(sql_try, function (error, results, fields) {
-//         if (error) throw error;
-//         else{
-//           return res.json({
-//             data: results
-//           })
-//         }
-//       });
-//     }
-//   });
-// });
 
 
 app.get('/schedule', (req, res) => {

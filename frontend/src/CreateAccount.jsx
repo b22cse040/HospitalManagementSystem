@@ -36,8 +36,18 @@ const CreateAccount = () => {
         setSnackbarOpen(true);
         setLoading(false);
       } else {
-        await fetch(`http://localhost:3001/makeAccount?name=${formData.firstName}&lastname=${formData.lastName}&email=${formData.email}&password=${formData.password}&address=${formData.address}&gender=${formData.gender}&conditions=${formData.conditions}&medications=${formData.medications}&surgeries=${formData.surgeries}`);
-        setLoading(false);
+       const res= await fetch(`http://localhost:3001/makeAccount?name=${formData.firstName}&lastname=${formData.lastName}&email=${formData.email}&password=${formData.password}&address=${formData.address}&gender=${formData.gender}&conditions=${formData.conditions}&medications=${formData.medications}&surgeries=${formData.surgeries}`);
+       if(res.status===500){
+          
+         alert("Account creation failed, changes have been rolled back");
+         window.location = "/login";
+       }
+       if(res.status===400){
+
+         alert("Account creation failed, changes have been rolled back");
+         window.location = "/login";
+       }
+       setLoading(false);
         setSnackbarMessage('Account created successfully!');
         setSnackbarOpen(true);
         // Redirect or handle success (e.g., navigate to home)
@@ -131,7 +141,7 @@ const CreateAccount = () => {
             label="Email"
             variant="outlined"
             name="email"
-            type="email"
+
             value={formData.email}
             onChange={handleChange}
             
@@ -148,10 +158,10 @@ const CreateAccount = () => {
             
             required
             helperText="At least 8 characters containing 2 digits"
-            inputProps={{
-              minLength: 8,
-              pattern: '.*[0-9].*[0-9].*',
-            }}
+            // inputProps={{
+            //   minLength: 8,
+            //   pattern: '.*[0-9].*[0-9].*',
+            // }}
           />
 
          
